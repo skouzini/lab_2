@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "ExpressionManager.h"
+#include "ExpressionManagerInterface.h"
 
 const int NUM_FILES = 5; // the total number of files to be read from
 
@@ -17,6 +18,7 @@ void parse_instruction(std::string temp, std::ofstream &ofs, ExpressionManager* 
 namespace ta {
 	std::istream& getline(std::istream& is, std::string& line);
 }
+using namespace std;
 
 
 int main() {
