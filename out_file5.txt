@@ -1,23 +1,46 @@
 postfixEvaluate - 1
+  Error
 postfixEvaluate + 1 3 4 -
+  Error
 postfixEvaluate + 1 3 -
+  Error
 postfixEvaluate +
+  Error
 postfixEvaluate + 3 4 - 1
+  Error
 postfixEvaluate } 78 97 + 6 / 5 +
+  Error
 postfixToInfix 3 + 3 /
+  Error
 postfixToInfix 3 3 4 +
+  ( 3 + 4 )
 postfixToInfix *
+  Error
 postfixToInfix + 3 3
+  Error
 postfixToInfix 3 3
+  3
 postfixToInfix five plus three
+  Error
 postfixToInfix 4.3 2 +
+  Error
 postfixToInfix 56 67 34 + - * 1
+  Error
 infixToPostfix { { 2 + 4 }
+  Error
 infixToPostfix 2 + a
+  Error
 infixToPostfix 3 $ 3
+  Error
 infixToPostfix 4 * ( 2 + 4 - ( 2 + )  ) - 4 / 5
+  2 3 4 2 4 + 2 + - * 4 5 / - 
 infixToPostfix 4 * ( 2 * + 4 - ( 2 + 2 ) ) - 4 / 5
+  2 3 4 2 4 + 2 + - * 4 5 / - 4 2 * 4 + 2 2 + - * 4 5 / - 
 infixToPostfix ( 3 + 5 - ( 4 + 2 ) }
+  Error
 infixToPostfix 3 + 4.2
+  Error
 infixToPostfix -
+  Error
 infixToPostfix @
+  Error

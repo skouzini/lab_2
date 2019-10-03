@@ -2,17 +2,16 @@
 
 ExpressionManager::ExpressionManager() {
     balanced = false;
+    input = "";
+    first = -1;
+    firstStr = "";
+    last = -1;
+    lastStr = "";
+    infixString = "";
+    outStr = "";
+    stackNum = -1;
 }
 ExpressionManager::~ExpressionManager() {}
-
-/*
-* Checks whether an expression is balanced on its parentheses
-*
-* - The given expression will have a space between every number or operator
-*
-* @return true if expression is balanced
-* @return false otherwise
-*/
 
 bool ExpressionManager::isBalanced(string expression) {
     stack<char> balanceStack;
@@ -78,62 +77,245 @@ bool ExpressionManager::isBalanced(string expression) {
 
 }
 
-/**
-* Converts a postfix expression into an infix expression
-* and returns the infix expression.
-*
-* - The given postfix expression will have a space between every number or operator.
-* - The returned infix expression must have a space between every number or operator.
-* - Redundant parentheses are acceptable i.e. ( ( 3 * 4 ) + 5 ).
-* - Check lab requirements for what will be considered invalid.
-*
-* return the string "invalid" if postfixExpression is not a valid postfix expression.
-* otherwise, return the correct infix expression as a string.
-*/
 string ExpressionManager::postfixToInfix(string postfixExpression) {
-    cout << "Postfix to Infix function working.\n";
-    cout << postfixExpression << endl;
+    stack<string> toInfixStack;
+    stringstream expression(postfixExpression);
+    int counter = 0;
+    
+    while (!expression.eof()) {
+        expression >> input;
+        
+        if (counter == 0 && !isNum(input)) {
+            return "Error";
+        }
+        
+        if (!isValid(input)) {
+            return "Error";
+        }
+        
+        if (isNum(input)) {
+            toInfixStack.push(input);
+        }
+        else if (toInfixStack.size() >= 2) {
+            lastStr = toInfixStack.top();
+            toInfixStack.pop();
+            firstStr = toInfixStack.top();
+            toInfixStack.pop();
+            
+            infixString = "( " + firstStr + ' ' + input + ' ' + lastStr + " )";
+            toInfixStack.push(infixString);
+        }
+        else {
+            return "Error";
+        }
+        
+        counter++;
+    }
+    
+    infixString = toInfixStack.top();
+    toInfixStack.pop();
+    return infixString;
 }
 
-/*
-* Evaluates a postfix expression returns the result as a string
-*
-* - The given postfix expression will have a space between every number or operator.
-* - Check lab requirements for what will be considered invalid.
-*
-* return the string "invalid" if postfixExpression is not a valid postfix Expression
-* otherwise, return the correct evaluation as a string
-*/
 string ExpressionManager::postfixEvaluate(string postfixExpression) {
-    cout << "Postfix Evaluate function working.\n";
+    stack<int> postfixEvalStack;
+    stringstream expression(postfixExpression);
+    int eval;
+    int counter = 0;
+    
+    while (!expression.eof()) {
+        expression >> input;
+        
+        if (counter == 0 && !isNum(input)) {
+            return "Error";
+        }
+        
+        if (!isValid(input)) {
+            return "Error";
+        }
+        
+        if (isNum(input)) {
+           stackNum = stoi(input);
+           postfixEvalStack.push(stackNum);
+        }
+        else if (postfixEvalStack.size() >=2) {
+            last = postfixEvalStack.top();
+            postfixEvalStack.pop();
+            first = postfixEvalStack.top();
+            postfixEvalStack.pop();
+            
+            postfixEvalStack.push(opEval(input, first, last));
+        }
+        else {
+            return "Error";
+        }
+        
+        counter++;
+    }
+    return to_string(postfixEvalStack.top());
 }
 
-/*
-* Converts an infix expression into a postfix expression
-* and returns the postfix expression
-*
-* - The given infix expression will have a space between every number or operator.
-* - The returned postfix expression must have a space between every number or operator.
-* - Check lab requirements for what will be considered invalid.
-*
-* return the string "invalid" if infixExpression is not a valid infix expression.
-* otherwise, return the correct postfix expression as a string.
-*/
 string ExpressionManager::infixToPostfix(string infixExpression) {
-    cout << "Infix to Postfix function working\n";
+
+    stack <string> opStack;
+    stringstream expression(infixExpression);
+    bool isFound = false;
+    int counter = 0;
+
+    while (!expression.eof()) {
+        expression >> input;
+        
+        if (counter == 0 && !isNum(input)) {
+            return "Error";
+        }
+        
+        if (!isValid(input)) {
+            return "Error";
+        }
+        
+        if (isNum(input)) {
+            outStr += input + " ";
+        }
+        else if (opStack.size() == 0 || 
+            precedence(input) == 0 || 
+            (precedence(input) > precedence(opStack.top()) && precedence(input) != 3)) {
+                opStack.push(input);
+        }
+        else if ((precedence(input) <= precedence(opStack.top())) && precedence(input) != 3) {
+            while (opStack.size() != 0 && (precedence(input) <= precedence(opStack.top()))) {
+                if (opStack.size() != 0) {
+                    outStr += opStack.top() + " ";
+                    opStack.pop();
+                }
+                else {
+                   break; 
+                }
+            }
+            
+            opStack.push(input);
+        }
+        else if (precedence(input) == 3) {
+            while (precedence(opStack.top()) != 0) {
+                outStr += opStack.top() + " ";
+                opStack.pop();
+            }
+            
+            if ((opStack.top() == "(" && input == ")") || 
+                (opStack.top() == "[" && input == "]") || 
+                (opStack.top() == "{" && input == "}")) {
+                    opStack.pop();
+            }
+            else {
+                return "Error";
+            }
+        }
+        
+        counter++;
+    }
+    while (opStack.size() != 0) {
+        outStr += opStack.top() + " ";
+        opStack.pop();
+    }
+    
+    return outStr;
 }
 
-int ExpressionManager::precedence(char test) {
-    if (test == ')' || test == ']' || test == '}') {
+bool ExpressionManager::isValid(const string test) {
+    bool validated = false;
+    
+    if (isNum(test)) {
+        validated = true;
+    }
+    else if (isOp(test)) {
+        validated = true;
+    }
+    
+    return validated;
+}
+
+bool ExpressionManager::isOp(const string test) {
+    bool opYes = false;
+    
+    if (test == "(" || 
+        test == ")" || 
+        test == "[" || 
+        test == "]" || 
+        test == "{" || 
+        test == "}" || 
+        test == "*" || 
+        test == "/" || 
+        test == "%" || 
+        test == "-" || 
+        test == "+") {
+            opYes = true;
+    }
+        
+    return opYes;
+}
+
+int ExpressionManager::precedence(string test) {
+    if (test == ")" || test == "]" || test == "}") {
+        cout << test << ": precedence 3\n"; ///////////
         return 3;
     }
-    else if (test == '*' || test == '/' || test == '%') {
+    else if (test == "*" || test == "/" || test == "%") {
+        cout << test << ": precedence 2\n"; ///////////
         return 2;
     }
-    else if (test == '+' || test == '-') {
+    else if (test == "+" || test == "-") {
+        cout << test << ": precedence 1\n"; ///////////
         return 1;
     }
-    else {
+    else  if (test == "(" || test == "[" || test == "{") {
+        cout << test << ": precedence 0\n"; ///////////
         return 0;
+    }
+    else {
+        cout << test << ": precedence -1\n"; ///////////
+        return -1;
+    }
+}
+
+bool ExpressionManager::isNum(const string test) {
+    bool numYes = false;
+    cout << "testing isNum: " << test << endl; /////////
+    
+    for (int i = 0; i < test.size(); i++) {
+        if (isdigit(test.at(i))) {
+            numYes = true;
+        }
+        else {
+            numYes = false;
+            return numYes;
+        }
+    }
+    
+    return numYes;
+}
+
+int ExpressionManager::stoi(const string num) {
+    int out = -1;
+    stringstream convert(num);
+    
+    convert >> out;
+
+    return out;
+}
+
+int ExpressionManager::opEval(const string op, int primary, int secondary) {
+    if (op == "+") {
+        return primary + secondary;
+    }
+    else if (op == "-") {
+        return primary - secondary;
+    }
+    else if (op == "*") {
+        return primary * secondary;
+    }
+    else if (op == "/") {
+        return primary / secondary;
+    }
+    else if (op == "%") {
+        return primary % secondary;
     }
 }
